@@ -6,6 +6,10 @@
     <artifactId>jetty-pkg</artifactId>
     <version>1.0.0</version>
     <name>Your project: Jetty Standalone Jar</name>
+    <organization>
+        <name>BEKK open source</name>
+        <url>http://github.com/bekkopen</url>
+    </organization>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
