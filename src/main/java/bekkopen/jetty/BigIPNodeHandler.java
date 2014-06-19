@@ -1,18 +1,18 @@
 package bekkopen.jetty;
 
-import org.eclipse.jetty.server.HttpConnection;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import static bekkopen.jetty.H.GET;
+import static bekkopen.jetty.H.POST;
+import static javax.servlet.http.HttpServletResponse.SC_OK;
+
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
 
-import static bekkopen.jetty.H.GET;
-import static bekkopen.jetty.H.POST;
-import static javax.servlet.http.HttpServletResponse.SC_OK;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.handler.AbstractHandler;
 
 /**
  * Example Node handler - i.e. if you run your apps behind a F5 BigIP hardware load-balancer, and wish
@@ -55,7 +55,7 @@ public class BigIPNodeHandler extends AbstractHandler {
         out.println(available ? "online" : "offline");
         out.close();
 
-        HttpConnection.getCurrentConnection().getRequest().setHandled(true);
+        serverRequest.setHandled(true);
     }
 
     public static String check(int port) {

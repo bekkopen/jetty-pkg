@@ -1,17 +1,17 @@
 package bekkopen.jetty;
 
-import org.apache.commons.io.FileUtils;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.server.nio.SelectChannelConnector;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
-import org.eclipse.jetty.webapp.WebAppContext;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.ProtectionDomain;
+
+import org.apache.commons.io.FileUtils;
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.eclipse.jetty.webapp.WebAppContext;
 
 public class Main {
 
@@ -45,26 +45,20 @@ public class Main {
     }
 
     private void start() {
-        // Start a Jetty server with some sensible(?) defaults
-        try {
-            Server srv = new Server();
-            srv.setStopAtShutdown(true);
+    	try {
 
-            // Allow 5 seconds to complete.
-            // Adjust this to fit with your own webapp needs.
-            // Remove this if you wish to shut down immediately (i.e. kill <pid> or Ctrl+C).
-            srv.setGracefulShutdown(5000);
+            // Setup Threadpool
+            QueuedThreadPool threadPool = new QueuedThreadPool(512);
 
-            // Increase thread pool
-            QueuedThreadPool threadPool = new QueuedThreadPool();
-            threadPool.setMaxThreads(100);
-            srv.setThreadPool(threadPool);
+            // Setup Jetty Server instance
+    		Server server = new Server(threadPool);
+            server.setStopAtShutdown(true);
+            server.setStopTimeout(5000);
 
-            // Ensure using the non-blocking connector (NIO)
-            Connector connector = new SelectChannelConnector();
+            ServerConnector connector = new ServerConnector(server);       
             connector.setPort(port);
-            connector.setMaxIdleTime(30000);
-            srv.setConnectors(new Connector[]{connector});
+            connector.setIdleTimeout(30000);
+            server.setConnectors(new Connector[]{connector});
 
             // Get the war-file
             ProtectionDomain protectionDomain = Main.class.getProtectionDomain();
@@ -75,18 +69,18 @@ public class Main {
 
             // Add the warFile (this jar)
             WebAppContext context = new WebAppContext(warFile, contextPath);
-            context.setServer(srv);
+            context.setServer(server);
             resetTempDirectory(context, currentDir);
 
             // Add the handlers
             HandlerList handlers = new HandlerList();
             handlers.addHandler(context);
-            handlers.addHandler(new ShutdownHandler(srv, context, secret));
+            handlers.addHandler(new ShutdownHandler(server, context, secret));
             handlers.addHandler(new BigIPNodeHandler(secret));
-            srv.setHandler(handlers);
+            server.setHandler(handlers);
 
-            srv.start();
-            srv.join();
+            server.start();
+            server.join();
         } catch (Exception e) {
             e.printStackTrace();
         }
